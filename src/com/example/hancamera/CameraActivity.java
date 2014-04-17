@@ -15,7 +15,6 @@ import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.MediaStore.Files.FileColumns;
 import android.util.Log;
 import android.view.SurfaceView;
 import android.view.View;
@@ -25,7 +24,7 @@ import android.widget.FrameLayout;
 public class CameraActivity extends Activity {
 
 	private Camera mCamera;
-	private CameraPreview mPreview;
+	private Preview mPreview;
 	private MediaRecorder mMediaRecorder;
 	private Button captureButton;
 	private SurfaceView surfaceView;
@@ -34,31 +33,47 @@ public class CameraActivity extends Activity {
 	public static final int MEDIA_TYPE_IMAGE = 1;
 	public static final int MEDIA_TYPE_VIDEO = 2;
 
+	public static final int K_STATE_PREVIEW = 1;
+	public static final int K_STATE_BUSY = 0;
+	public static final int K_STATE_FROZEN = -1;
+
+	private int mPreviewState = K_STATE_PREVIEW;
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_camera);
-		
-		surfaceView = (SurfaceView)findViewById(R.id.surfaceView);
 
-		// Create an instance of Camera
-		mCamera = getCameraInstance();
+		surfaceView = (SurfaceView) findViewById(R.id.surfaceView);
 
 		// Create our Preview view and set it as the content of our activity.
-		mPreview = new CameraPreview(this, mCamera, surfaceView);
-		
-		FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
+		mPreview = new Preview(this, surfaceView);
+
+		((FrameLayout) findViewById(R.id.camera_preview)).addView(mPreview);
+
+		while (!safeCameraOpen()) {
+
+		}
+		mPreview.setCamera(mCamera);
+
 		captureButton = (Button) findViewById(R.id.button_capture);
 		captureButton.bringToFront();
 		captureButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				// get an image from the camera
-				mCamera.takePicture(null, null, mPicture);
+				switch (mPreviewState) {
+				case K_STATE_FROZEN:
+					mCamera.startPreview();
+					mPreviewState = K_STATE_PREVIEW;
+					break;
+
+				default:
+					mCamera.takePicture(null, rawCallback, null);
+					mPreviewState = K_STATE_BUSY;
+				} // switch
+//				shutterBtnConfig();
 			}
 		});
-
-//		preview.addView(mPreview);
 	}
 
 	private PictureCallback mPicture = new PictureCallback() {
@@ -78,11 +93,18 @@ public class CameraActivity extends Activity {
 				fos.write(data);
 				fos.close();
 				Log.e("onPictureTaken", "save success, path: " + pictureFile.getPath());
+				mPreviewState = K_STATE_FROZEN;
 			} catch (FileNotFoundException e) {
 				Log.e(TAG, "File not found: " + e.getMessage());
 			} catch (IOException e) {
 				Log.e(TAG, "Error accessing file: " + e.getMessage());
 			}
+		}
+	};
+
+	PictureCallback rawCallback = new PictureCallback() {
+		public void onPictureTaken(byte[] data, Camera camera) {
+			// Log.d(TAG, "onPictureTaken - raw");
 		}
 	};
 
@@ -150,14 +172,27 @@ public class CameraActivity extends Activity {
 		}
 	}
 
-	/** A safe way to get an instance of the Camera object. */
-	public static Camera getCameraInstance() {
-		Camera c = null;
+	private boolean safeCameraOpen() {
+		boolean qOpened = false;
+
 		try {
-			c = Camera.open(); // attempt to get a Camera instance
+			releaseCameraAndPreview();
+			mCamera = Camera.open();
+			qOpened = (mCamera != null);
+			Log.e("safeCameraOpen", "true");
 		} catch (Exception e) {
-			// Camera is not available (in use or does not exist)
+			Log.e(getString(R.string.app_name), "failed to open Camera");
+			e.printStackTrace();
 		}
-		return c; // returns null if camera is unavailable
+
+		return qOpened;
+	}
+
+	private void releaseCameraAndPreview() {
+		mPreview.setCamera(null);
+		if (mCamera != null) {
+			mCamera.release();
+			mCamera = null;
+		}
 	}
 }
