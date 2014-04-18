@@ -60,7 +60,7 @@ public class Preview extends ViewGroup implements SurfaceHolder.Callback {
 			// Important: Call startPreview() to start updating the preview
 			// surface. Preview must be started before you can take a picture.
 			mCamera.startPreview();
-			Log.e("startPreview", "sucess");
+			Log.e("startPreview", "success");
 		}
 	}
 

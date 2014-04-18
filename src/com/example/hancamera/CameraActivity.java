@@ -61,17 +61,7 @@ public class CameraActivity extends Activity {
 		captureButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				switch (mPreviewState) {
-				case K_STATE_FROZEN:
-					mCamera.startPreview();
-					mPreviewState = K_STATE_PREVIEW;
-					break;
-
-				default:
-					mCamera.takePicture(null, rawCallback, null);
-					mPreviewState = K_STATE_BUSY;
-				} // switch
-//				shutterBtnConfig();
+				mCamera.takePicture(null, null, mPicture);
 			}
 		});
 	}
@@ -93,7 +83,7 @@ public class CameraActivity extends Activity {
 				fos.write(data);
 				fos.close();
 				Log.e("onPictureTaken", "save success, path: " + pictureFile.getPath());
-				mPreviewState = K_STATE_FROZEN;
+				mCamera.startPreview();
 			} catch (FileNotFoundException e) {
 				Log.e(TAG, "File not found: " + e.getMessage());
 			} catch (IOException e) {
@@ -102,11 +92,6 @@ public class CameraActivity extends Activity {
 		}
 	};
 
-	PictureCallback rawCallback = new PictureCallback() {
-		public void onPictureTaken(byte[] data, Camera camera) {
-			// Log.d(TAG, "onPictureTaken - raw");
-		}
-	};
 
 	/** Create a file Uri for saving an image or video */
 	private static Uri getOutputMediaFileUri(int type) {
