@@ -92,7 +92,6 @@ public class CameraActivity extends Activity {
 		}
 	};
 
-
 	/** Create a file Uri for saving an image or video */
 	private static Uri getOutputMediaFileUri(int type) {
 		return Uri.fromFile(getOutputMediaFile(type));
@@ -136,9 +135,7 @@ public class CameraActivity extends Activity {
 	@Override
 	protected void onPause() {
 		super.onPause();
-		releaseMediaRecorder(); // if you are using MediaRecorder, release it
-								// first
-		releaseCamera(); // release the camera immediately on pause event
+		releaseMediaRecorder(); // if you are using MediaRecorder, release it first
 	}
 
 	private void releaseMediaRecorder() {
@@ -150,12 +147,6 @@ public class CameraActivity extends Activity {
 		}
 	}
 
-	private void releaseCamera() {
-		if (mCamera != null) {
-			mCamera.release(); // release the camera for other applications
-			mCamera = null;
-		}
-	}
 
 	private boolean safeCameraOpen() {
 		boolean qOpened = false;

@@ -113,6 +113,8 @@ public class Preview extends ViewGroup implements SurfaceHolder.Callback {
 		if (mCamera != null) {
 			// Call stopPreview() to stop updating the preview surface.
 			mCamera.stopPreview();
+			mCamera.release(); // release the camera for other applications
+			mCamera = null;
 		}
 	}
 	
