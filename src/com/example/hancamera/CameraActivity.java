@@ -10,6 +10,7 @@ import java.util.Locale;
 
 import android.app.Activity;
 import android.hardware.Camera;
+import android.hardware.Camera.AutoFocusCallback;
 import android.hardware.Camera.PictureCallback;
 import android.media.MediaRecorder;
 import android.net.Uri;
@@ -32,12 +33,6 @@ public class CameraActivity extends Activity {
 	private final String TAG = "CameraActivity";
 	public static final int MEDIA_TYPE_IMAGE = 1;
 	public static final int MEDIA_TYPE_VIDEO = 2;
-
-	public static final int K_STATE_PREVIEW = 1;
-	public static final int K_STATE_BUSY = 0;
-	public static final int K_STATE_FROZEN = -1;
-
-	private int mPreviewState = K_STATE_PREVIEW;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -91,6 +86,7 @@ public class CameraActivity extends Activity {
 			}
 		}
 	};
+	
 
 	/** Create a file Uri for saving an image or video */
 	private static Uri getOutputMediaFileUri(int type) {
@@ -146,7 +142,6 @@ public class CameraActivity extends Activity {
 			mCamera.lock(); // lock camera for later use
 		}
 	}
-
 
 	private boolean safeCameraOpen() {
 		boolean qOpened = false;

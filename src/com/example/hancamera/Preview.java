@@ -5,6 +5,7 @@ import java.util.List;
 
 import android.content.Context;
 import android.hardware.Camera;
+import android.hardware.Camera.AutoFocusCallback;
 import android.hardware.Camera.Size;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -59,10 +60,27 @@ public class Preview extends ViewGroup implements SurfaceHolder.Callback {
 
 			// Important: Call startPreview() to start updating the preview
 			// surface. Preview must be started before you can take a picture.
+			
+			Camera.Parameters myParam = mCamera.getParameters();
+			myParam.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+			mCamera.setParameters(myParam);
 			mCamera.startPreview();
+			mCamera.autoFocus(myAutoFocusCallback);
 			Log.e("startPreview", "success");
 		}
 	}
+	
+	private AutoFocusCallback myAutoFocusCallback = new AutoFocusCallback() {
+
+		public void onAutoFocus(boolean success, Camera camera) {
+			if (success) {
+				Log.i(TAG, "myAutoFocusCallback: success...");
+			}
+			else {
+				Log.i(TAG, "myAutoFocusCallback: Fail...");
+			}
+		}
+	};
 
 	/**
 	 * When this function returns, mCamera will be null.
